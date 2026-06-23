@@ -21,3 +21,11 @@ A national retail company needs to select European cities for expansion. Using r
 ## 💡 Key Findings
 1. **PC1 (Urban Scale):** Highlights the massive gap between metropolises (e.g., Paris, Berlin) and regional cities. 
 2. **PC2 (Economic Profile):** Successfully polarizes Northern/Central European cities (driven by education and industrial stability) against Southern European cities (driven by tourism and seasonal employment).
+
+## 📈 Visualizations
+
+**City Clustering based on PC1 & PC2**
+![Cities Scores](Cities_Scores_Plot.png)
+
+**Scree Plot for Component Selection**
+![Scree Plot](Scree_Plot.png)
