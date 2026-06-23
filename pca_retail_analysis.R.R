@@ -166,9 +166,8 @@ phi <- sqrt((sum(R^2) - p) / (p * (p - 1)))
 #  Έλεγχος Συσχετίσεων (Structure Analysis)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 library(psych)
-
-# Ανοίγουμε ένα πολύ μεγάλο PDF (20x20 ίντσες) για να χωρέσουν όλες οι μεταβλητές
-pdf("All_Variables_Correlations.pdf", width = 20, height = 20)
+# Ανοίγουμε ένα αρχείο PNG για να χωρέσουν όλες οι μεταβλητές
+png("All_Variables_Correlations.png", width = 1600, height = 1600)
 
 # Τυπώνουμε ΟΛΟ τον πίνακα df_num χωρίς περιορισμό
 # Το cex.labels=0.8 βοηθάει να μην αλληλοκαλύπτονται τα ονόματα
@@ -203,9 +202,7 @@ sorted_vars <- sort(variances, decreasing = TRUE)
 
 print(sorted_vars)
 
-# Για να φανεί η χαοτική διαφορά μεταξύ διασπορών διαφορετικών πόλεων
-# Διορθωμένο barplot για τις διακυμάνσεις
-pdf("Variance.pdf", width = 12, height = 8)
+png("Variance.png", width = 1200, height = 800)
 par(mar = c(15, 5, 4, 2)) # Δίνουμε 15 ίντσες χώρο κάτω!
 barplot(log10(sorted_vars), 
         las = 2,          # Κάθετα ονόματα
@@ -238,12 +235,14 @@ short_names <- paste0("V", 1:ncol(df_num))
 rename_df <- data.frame(ShortName = short_names, OriginalName = colnames(df_num))
 print("--- ΛΕΞΙΚΟ ΜΕΤΑΒΛΗΤΩΝ ΓΙΑ ΤΟ REPORT ---")
 print(rename_df)
-rename_df[3,]
+
+# Για να τρέξουν τα γραφήματα, μετονομάζουμε προσωρινά το df_num
+df_plot <- df_num
+colnames(df_plot) <- short_names
 
 
-
-# Α. Τυποποιημένα Boxplots (Φαίνονται ξεκάθαρα τα outliers ανά μεταβλητή)
-pdf("Scaled_Boxplots.pdf", width = 12, height = 6)
+# Α. Τυποποιημένα Boxplots (Φαίνονται ξεκάθαρα τα outliers ανά μεταβλητή) - Αποθήκευση σε PNG
+png("Scaled_Boxplots.png", width = 1200, height = 600)
 par(mar = c(4, 4, 3, 1)) # Κανονικά περιθώρια πλέον!
 boxplot(scale(df_plot), col = "lightblue", pch = 19,
         main = "Standardized Boxplots (Outlier Detection)",
@@ -258,7 +257,7 @@ dev.off()
 
 # Β. Parallel Coordinates (Spaghetti Plot - Εντοπισμός ακραίων πόλεων)
 library(MASS)
-pdf("Parallel_Coordinates.pdf", width = 14, height = 7)
+png("Parallel_Coordinates.png", width = 1400, height = 700)
 par(mar = c(4, 4, 3, 1))
 parcoord(scale(df_plot), col = rainbow(nrow(df_plot)), var.label = TRUE, 
          main = "Parallel Coordinates (Scaled Data)")
@@ -347,10 +346,13 @@ target_variance <- 85 # Μπορείς να παίξεις με αυτό το ν
 var_components <- which(eigTable$Cumulative_Perc >= target_variance)[1]
 print(paste("Για να εξηγήσουμε >", target_variance, "% της διασποράς, χρειαζόμαστε:", var_components, "συνιστώσες."))
 
-# 3, Δημιουργία Scree Plot
+
+# 3, Δημιουργία Scree Plot (Αποθήκευση σε PNG)
+png("Scree_Plot.png", width = 800, height = 600)
 plot(eigTable$Component, eigTable$Eigenvalue, type = "b", pch = 19, col = "steelblue",
      xlab = "Component Number", ylab = "Eigenvalue", 
      main = "Scree Plot (Standardized Data)")
+dev.off()
 #  Συνδιάζοντας τα κριτήρια, καταλήγω στις 3 συνιστώσες εξηγούν μια 
 k <- 3
 
@@ -410,17 +412,17 @@ print(scores2[scores2_sorted[(length(scores2)-4):length(scores2)]])
 # Υπολογισμός και της 3ης συνιστώσας (για να είναι πλήρης η ανάλυση)
 scores3 <- scale(df_num) %*% eigR$vectors[3,]
 names(scores3) <- rownames(df_num)
-
-# LOADING PLOT (Μεταβλητές)
+# LOADING PLOT (Μεταβλητές) - Αποθήκευση σε PNG
+png("Loading_Plot.png", width = 800, height = 800)
 # Στον άξονα Χ η PC1, στον άξονα Υ η PC2. 
 # Κάθε κουκκίδα είναι μία μεταβλητή (από το 1 έως το 27).
-
 plot(eigR$vectors[1, ], eigR$vectors[2, ], 
      xlab = "PC1 (Loadings)", ylab = "PC2 (Loadings)",
      main = "Task 4: Variable Loadings Plot",
      pch = 19, col = "blue")
 abline(h = 0, v = 0, lty = 2)
-text(eigR$vectors[1, ], eigR$vectors[2, ], labels = 1:27, pos = 3, cex = 0.7)
+text(eigR$vectors[1, ], eigR$vectors[2, ], labels = 1:ncol(df_num), pos = 3, cex = 0.7)
+dev.off()
 
 #Να μπορέσουμε να αναγνωρίσουμε ποιές μεταβλητές εμφανίζονται στο γράφημα
 loadings_matrix <- data.frame(
@@ -456,9 +458,11 @@ View(loadings_matrix)
 #     διαμόρφωση είτε του πρώτου, είτε του δεύτερου άξονα.
 
 #  SCORES PLOT (Γράφημα Πόλεων) 
+# Συνδυασμός scores 1 και 2 σε ένα matrix για ευκολία
+scores <- cbind(scores1, scores2)
 
-
-#  Φτιάχνουμε το γράφημα
+#  Φτιάχνουμε το γράφημα - Αποθήκευση σε PNG
+png("Cities_Scores_Plot.png", width = 1000, height = 1000)
 plot(scores[, 1], scores[, 2], 
      main = "Task 5: Cities Scores Plot",
      xlab = "PC1 (Αστικό Μέγεθος)", 
@@ -467,6 +471,9 @@ plot(scores[, 1], scores[, 2],
 
 # Βάζουμε τους άξονες στο 0
 abline(h = 0, v = 0, lty = 2)
+# Προσθέτουμε τα ονόματα των πόλεων (επιλεκτικά για να μην γεμίσει το γράφημα)
+text(scores[, 1], scores[, 2], labels = rownames(df_num), pos = 3, cex = 0.5)
+dev.off()
 
 #Φτιάχνουμε το dataframe με τα scores των πόλεων
 scores_matrix <- data.frame(
@@ -474,6 +481,8 @@ scores_matrix <- data.frame(
   PC1_Score = as.numeric(scores1),
   PC2_Score = as.numeric(scores2)
 )
+
+
 
 # Ανοίγουμε τον πίνακα για να δούμε καθαρά κάθε πόλη
 View(scores_matrix)
@@ -526,3 +535,4 @@ head(round(eigS$vectors, 6))
 #  εξηγεί σχεδόν όλο το ποσοστό της της διασποράς και το ιδιοδιάνυσμα που αντιστοιχεί 
 # σε αυτή σχεδόν ταυτίζεται με την μεταβλητή Acticity rate μόνο και μόνο επειδή 
 #  έχει μεγάλα νούμερα.
+
